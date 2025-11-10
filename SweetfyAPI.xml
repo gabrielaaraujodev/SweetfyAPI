@@ -1,0 +1,346 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>SweetfyAPI</name>
+    </assembly>
+    <members>
+        <member name="T:SweetfyAPI.Controllers.AdminController">
+            <summary>
+            Manages administrative operations like role creation and user assignments.
+            All endpoints require 'Admin' role authorization.
+            </summary>
+        </member>
+        <member name="M:SweetfyAPI.Controllers.AdminController.#ctor(Microsoft.AspNetCore.Identity.UserManager{SweetfyAPI.Entities.ApplicationUser},Microsoft.AspNetCore.Identity.RoleManager{Microsoft.AspNetCore.Identity.IdentityRole})">
+            <summary>
+            Initializes a new instance of the <see cref="T:SweetfyAPI.Controllers.AdminController"/>.
+            </summary>
+            <param name="userManager">ASP.NET Identity service for managing users.</param>
+            <param name="roleManager">ASP.NET Identity service for managing roles.</param>
+        </member>
+        <member name="M:SweetfyAPI.Controllers.AdminController.CreateRole(System.String)">
+            <summary>
+            Creates a new role in the system.
+            </summary>
+            <param name="roleName">The name of the new role to create.</param>
+            <returns>A success or error message.</returns>
+        </member>
+        <member name="M:SweetfyAPI.Controllers.AdminController.AddUserToRole(System.String,System.String)">
+            <summary>
+            Assigns an existing user to an existing role.
+            </summary>
+            <param name="email">The email of the user to assign.</param>
+            <param name="roleName">The name of the role to assign to the user.</param>
+            <returns>A success or error message.</returns>
+        </member>
+        <member name="M:SweetfyAPI.Controllers.AdminController.RevokeRefreshToken(System.String)">
+            <summary>
+            Revokes the refresh token for a specific user, effectively logging them out on their next refresh attempt.
+            </summary>
+            <param name="email">The email of the user whose token will be revoked.</param>
+            <returns>No content if successful, or Not Found if the user doesn't exist.</returns>
+        </member>
+        <member name="T:SweetfyAPI.Controllers.AuthController">
+            <summary>
+            Handles authentication, user registration, and token management.
+            </summary>
+        </member>
+        <member name="M:SweetfyAPI.Controllers.AuthController.#ctor(SweetfyAPI.TokenService.ITokenService,Microsoft.AspNetCore.Identity.UserManager{SweetfyAPI.Entities.ApplicationUser},Microsoft.Extensions.Configuration.IConfiguration,AutoMapper.IMapper)">
+            <summary>
+            Initializes a new instance of the <see cref="T:SweetfyAPI.Controllers.AuthController"/>.
+            </summary>
+            <param name="tokenService">Service for generating and validating tokens.</param>
+            <param name="userManager">ASP.NET Identity service for managing users.</param>
+            <param name="configuration">Application configuration to access JWT settings.</param>
+            <param name="mapper">AutoMapper instance for DTO mapping.</param>
+        </member>
+        <member name="M:SweetfyAPI.Controllers.AuthController.Register(SweetfyAPI.DTOs.AuthDTO.RegisterModel)">
+            <summary>
+            Registers a new user and their associated bakery.
+            </summary>
+            <param name="model">The registration data (username, email, password, bakery name).</param>
+            <returns>A success or error message.</returns>
+        </member>
+        <member name="M:SweetfyAPI.Controllers.AuthController.Login(SweetfyAPI.DTOs.AuthDTO.LoginModel)">
+            <summary>
+            Logs in an existing user.
+            </summary>
+            <param name="model">The user's login credentials (email and password).</param>
+            <returns>An access token and refresh token on success.</returns>
+        </member>
+        <member name="M:SweetfyAPI.Controllers.AuthController.RefreshToken(SweetfyAPI.DTOs.AuthDTO.TokenModel)">
+            <summary>
+            Generates a new access token using a valid refresh token.
+            </summary>
+            <param name="tokenModel">A model containing the expired access token and the valid refresh token.</param>
+            <returns>A new set of access and refresh tokens.</returns>
+        </member>
+        <member name="M:SweetfyAPI.Controllers.AuthController.GetUserLogged">
+            <summary>
+            Gets the profile information for the currently authenticated (logged-in) user.
+            </summary>
+            <returns>The user's public data (UserDto).</returns>
+        </member>
+        <member name="M:SweetfyAPI.Controllers.AuthController.GetClaimsForUser(SweetfyAPI.Entities.ApplicationUser)">
+            <summary>
+            Private helper method to generate the list of claims for a user's JWT.
+            </summary>
+            <param name="user">The user entity.</param>
+            <returns>A list of claims.</returns>
+        </member>
+        <member name="T:SweetfyAPI.Controllers.IngredientController">
+            <summary>
+            Manages ingredients (raw materials) for the logged-in user's bakery.
+            </summary>
+        </member>
+        <member name="M:SweetfyAPI.Controllers.IngredientController.#ctor(SweetfyAPI.Services.IIngredientService,AutoMapper.IMapper)">
+            <summary>
+            Initializes a new instance of the <see cref="T:SweetfyAPI.Controllers.IngredientController"/>.
+            </summary>
+            <param name="ingredientService">The service responsible for ingredient logic.</param>
+            <param name="mapper">The AutoMapper instance for DTO conversion.</param>
+        </member>
+        <member name="M:SweetfyAPI.Controllers.IngredientController.GetMyIngredients">
+            <summary>
+            Gets all ingredients for the logged-in user's bakery.
+            </summary>
+            <returns>A list of ingredients.</returns>
+        </member>
+        <member name="M:SweetfyAPI.Controllers.IngredientController.GetIngredient(System.Int32)">
+            <summary>
+            Gets a specific ingredient by its unique ID.
+            </summary>
+            <param name="id">The ID of the ingredient to retrieve.</param>
+            <returns>The requested ingredient.</returns>
+        </member>
+        <member name="M:SweetfyAPI.Controllers.IngredientController.CreateIngredient(SweetfyAPI.DTOs.IndredientDTO.CreateIngredientDto)">
+            <summary>
+            Creates a new ingredient for the user's bakery.
+            </summary>
+            <param name="dto">The data used to create the new ingredient.</param>
+            <returns>The newly created ingredient.</returns>
+        </member>
+        <member name="M:SweetfyAPI.Controllers.IngredientController.UpdateIngredient(System.Int32,SweetfyAPI.DTOs.IndredientDTO.UpdateIngredientDto)">
+            <summary>
+            Updates an existing ingredient.
+            </summary>
+            <param name="id">The ID of the ingredient to update.</param>
+            <param name="dto">The updated data for the ingredient.</param>
+            <returns>No content (204) if the update is successful.</returns>
+        </member>
+        <member name="M:SweetfyAPI.Controllers.IngredientController.DeleteIngredient(System.Int32)">
+            <summary>
+            Deletes an ingredient by its unique ID.
+            </summary>
+            <param name="id">The ID of the ingredient to delete.</param>
+            <returns>No content (204) if the deletion is successful.</returns>
+        </member>
+        <member name="T:SweetfyAPI.Controllers.OrderController">
+            <summary>
+            Manages orders (or quotes) for the logged-in user's bakery.
+            </summary>
+        </member>
+        <member name="M:SweetfyAPI.Controllers.OrderController.#ctor(SweetfyAPI.Services.IOrderService,AutoMapper.IMapper)">
+            <summary>
+            Initializes a new instance of the <see cref="T:SweetfyAPI.Controllers.OrderController"/>.
+            </summary>
+            <param name="orderService">The service responsible for order logic.</param>
+            <param name="mapper">The AutoMapper instance for DTO conversion.</param>
+        </member>
+        <member name="M:SweetfyAPI.Controllers.OrderController.GetMyOrders">
+            <summary>
+            Gets a simplified list of all orders for the user's bakery.
+            </summary>
+            <returns>A list of simple OrderDto objects.</returns>
+        </member>
+        <member name="M:SweetfyAPI.Controllers.OrderController.GetOrderDetails(System.Int32)">
+            <summary>
+            Gets the full details of a specific order, including its products and recipes.
+            </summary>
+            <param name="id">The ID of the order to retrieve.</param>
+            <returns>The complete OrderDetailsDto.</returns>
+        </member>
+        <member name="M:SweetfyAPI.Controllers.OrderController.CreateOrder(SweetfyAPI.DTOs.OrderDTO.CreateOrderDto)">
+            <summary>
+            Creates a new order. This operation is transactional and 
+            links all specified products/recipes.
+            </summary>
+            <param name="dto">The composite DTO containing order data and its items.</param>
+            <returns>The newly created order with all its details.</returns>
+        </member>
+        <member name="M:SweetfyAPI.Controllers.OrderController.UpdateOrder(System.Int32,SweetfyAPI.DTOs.OrderDTO.UpdateOrderDto)">
+            <summary>
+            Updates an existing order's main details (e.g., Name, Description, Status). 
+            This does NOT update the order's items.
+            </summary>
+            <param name="id">The ID of the order to update.</param>
+            <param name="dto">The DTO containing the order's top-level data to update.</param>
+            <returns>No content (204) on success.</returns>
+        </member>
+        <member name="M:SweetfyAPI.Controllers.OrderController.DeleteOrder(System.Int32)">
+            <summary>
+            Deletes an order and all its associated items (order products/recipes) by its ID.
+            </summary>
+            <param name="id">The ID of the order to delete.</param>
+            <returns>No content (204) on success.</returns>
+        </member>
+        <member name="T:SweetfyAPI.Controllers.ProductController">
+            <summary>
+            Manages final products for the logged-in user's bakery. 
+            Products can be made of ingredients, services, and other recipes.
+            </summary>
+        </member>
+        <member name="M:SweetfyAPI.Controllers.ProductController.#ctor(SweetfyAPI.Services.IProductService,AutoMapper.IMapper)">
+            <summary>
+            Initializes a new instance of the <see cref="T:SweetfyAPI.Controllers.ProductController"/>.
+            </summary>
+            <param name="productService">The service responsible for product logic.</param>
+            <param name="mapper">The AutoMapper instance for DTO conversion.</param>
+        </member>
+        <member name="M:SweetfyAPI.Controllers.ProductController.GetMyProducts">
+            <summary>
+            Gets a simplified list of all products for the user's bakery.
+            </summary>
+            <returns>A list of simple ProductDto objects.</returns>
+        </member>
+        <member name="M:SweetfyAPI.Controllers.ProductController.GetProductDetails(System.Int32)">
+            <summary>
+            Gets the full details of a specific product, including its components (ingredients, recipes, services).
+            </summary>
+            <param name="id">The ID of the product to retrieve.</param>
+            <returns>The complete ProductDetailsDto.</returns>
+        </member>
+        <member name="M:SweetfyAPI.Controllers.ProductController.CreateProduct(SweetfyAPI.DTOs.ProductDTO.CreateProductDto)">
+            <summary>
+            Creates a new product. This operation is transactional and 
+            creates all associated components (ingredients, recipes, services).
+            </summary>
+            <param name="dto">The composite DTO containing product data and its components.</param>
+            <returns>The newly created product with all its details.</returns>
+        </member>
+        <member name="M:SweetfyAPI.Controllers.ProductController.UpdateProduct(System.Int32,SweetfyAPI.DTOs.ProductDTO.UpdateProductDto)">
+            <summary>
+            Updates an existing product and its components list.
+            The old component list will be replaced by the new one.
+            </summary>
+            <param name="id">The ID of the product to update.</param>
+            <param name="dto">The updated composite DTO for the product.</param>
+            <returns>No content (204) on success.</returns>
+        </member>
+        <member name="M:SweetfyAPI.Controllers.ProductController.DeleteProduct(System.Int32)">
+            <summary>
+            Deletes a product and all its associated components by its ID.
+            </summary>
+            <param name="id">The ID of the product to delete.</param>
+            <returns>No content (204) on success.</returns>
+        </member>
+        <member name="T:SweetfyAPI.Controllers.RecipeController">
+            <summary>
+            Manages recipes for the logged-in user's bakery. 
+            Recipes are composite items made of ingredients and services.
+            </summary>
+        </member>
+        <member name="M:SweetfyAPI.Controllers.RecipeController.#ctor(SweetfyAPI.Services.IRecipeService,AutoMapper.IMapper)">
+            <summary>
+            Initializes a new instance of the <see cref="T:SweetfyAPI.Controllers.RecipeController"/>.
+            </summary>
+            <param name="recipeService">The service responsible for recipe logic.</param>
+            <param name="mapper">The AutoMapper instance for DTO conversion.</param>
+        </member>
+        <member name="M:SweetfyAPI.Controllers.RecipeController.GetMyRecipes">
+            <summary>
+            Gets a simplified list of all recipes for the user's bakery.
+            </summary>
+            <returns>A list of simple RecipeDto objects.</returns>
+        </member>
+        <member name="M:SweetfyAPI.Controllers.RecipeController.GetRecipeDetails(System.Int32)">
+            <summary>
+            Gets the full details of a specific recipe, including its ingredients and services.
+            </summary>
+            <param name="id">The ID of the recipe to retrieve.</param>
+            <returns>The complete RecipeDetailsDto.</returns>
+        </member>
+        <member name="M:SweetfyAPI.Controllers.RecipeController.CreateRecipe(SweetfyAPI.DTOs.RecipeDTO.CreateRecipeDto)">
+            <summary>
+            Creates a new recipe. This operation is transactional and will also 
+            create the associated recipe ingredients and services.
+            </summary>
+            <param name="dto">The composite DTO containing recipe data and its components.</param>
+            <returns>The newly created recipe with all its details.</returns>
+        </member>
+        <member name="M:SweetfyAPI.Controllers.RecipeController.UpdateRecipe(System.Int32,SweetfyAPI.DTOs.RecipeDTO.UpdateRecipeDto)">
+            <summary>
+            Updates an existing recipe, including its list of ingredients and services. 
+            The old component list will be replaced by the new one.
+            </summary>
+            <param name="id">The ID of the recipe to update.</param>
+            <param name="dto">The updated composite DTO for the recipe.</param>
+            <returns>No content (204) on success.</returns>
+        </member>
+        <member name="M:SweetfyAPI.Controllers.RecipeController.DeleteRecipe(System.Int32)">
+            <summary>
+            Deletes a recipe and all its associated components (ingredients/services) by its ID.
+            </summary>
+            <param name="id">The ID of the recipe to delete.</param>
+            <returns>No content (204) on success.</returns>
+        </member>
+        <member name="T:SweetfyAPI.Controllers.ServiceController">
+            <summary>
+            Manages services (labor, fixed costs) for the logged-in user's bakery.
+            </summary>
+        </member>
+        <member name="M:SweetfyAPI.Controllers.ServiceController.#ctor(SweetfyAPI.Services.IServiceService,AutoMapper.IMapper)">
+            <summary>
+            Initializes a new instance of the <see cref="T:SweetfyAPI.Controllers.ServiceController"/>.
+            </summary>
+            <param name="serviceService">The service responsible for service logic.</param>
+            <param name="mapper">The AutoMapper instance for DTO conversion.</param>
+        </member>
+        <member name="M:SweetfyAPI.Controllers.ServiceController.GetMyServices">
+            <summary>
+            Gets all services associated with the logged-in user's bakery.
+            </summary>
+            <returns>A list of services.</returns>
+        </member>
+        <member name="M:SweetfyAPI.Controllers.ServiceController.GetService(System.Int32)">
+            <summary>
+            Gets a specific service by its ID.
+            </summary>
+            <param name="id">The ID of the service to retrieve.</param>
+            <returns>The found service.</returns>
+        </member>
+        <member name="M:SweetfyAPI.Controllers.ServiceController.CreateService(SweetfyAPI.DTOs.ServiceDTO.CreateServiceDto)">
+            <summary>
+            Creates a new service for the user's bakery.
+            </summary>
+            <param name="dto">The data for the new service.</param>
+            <returns>The newly created service.</returns>
+        </member>
+        <member name="M:SweetfyAPI.Controllers.ServiceController.UpdateService(System.Int32,SweetfyAPI.DTOs.ServiceDTO.UpdateServiceDto)">
+            <summary>
+            Updates an existing service.
+            </summary>
+            <param name="id">The ID of the service to update.</param>
+            <param name="dto">The updated data for the service.</param>
+            <returns>No content (204) on success.</returns>
+        </member>
+        <member name="M:SweetfyAPI.Controllers.ServiceController.DeleteService(System.Int32)">
+            <summary>
+            Deletes a service by its ID.
+            </summary>
+            <param name="id">The ID of the service to delete.</param>
+            <returns>No content (204) on success.</returns>
+        </member>
+        <member name="T:SweetfyAPI.Migrations.InitialCreate">
+            <inheritdoc />
+        </member>
+        <member name="M:SweetfyAPI.Migrations.InitialCreate.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:SweetfyAPI.Migrations.InitialCreate.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:SweetfyAPI.Migrations.InitialCreate.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+    </members>
+</doc>

@@ -1,0 +1,6 @@
+@SweetfyAPI_HostAddress = http://localhost:5190
+
+GET {{SweetfyAPI_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
