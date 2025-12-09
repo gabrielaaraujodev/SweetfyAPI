@@ -7,6 +7,8 @@
         Task<Service> AddAsync(Service service);
         Task<Service?> UpdateAsync(Service service);
         Task<Service?> DeleteAsync(int id);
+        Task<List<Service>> GetByIdsAsync(IEnumerable<int> ids);
+        Task<bool> DeleteRangeAsync(IEnumerable<Service> services);
     }
 
 }

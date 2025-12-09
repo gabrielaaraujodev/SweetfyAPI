@@ -8,6 +8,8 @@
         Task<Order> AddAsync(Order order);
         Task<Order?> UpdateAsync(Order order);
         Task<Order?> DeleteAsync(int id);
+        Task<List<Order>> GetByIdsAsync(IEnumerable<int> ids);
+        Task<bool> DeleteRangeAsync(IEnumerable<Order> products);
     }
 
 }

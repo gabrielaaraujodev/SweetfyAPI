@@ -481,6 +481,9 @@ namespace SweetfyAPI.Migrations
                     b.Property<int>("BakeryId")
                         .HasColumnType("int");
 
+                    b.Property<decimal>("BaseCost")
+                        .HasColumnType("decimal(18, 2)");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 

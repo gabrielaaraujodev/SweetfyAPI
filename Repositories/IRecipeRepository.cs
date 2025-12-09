@@ -8,6 +8,8 @@
         Task<Recipe> AddAsync(Recipe recipe);
         Task<Recipe?> UpdateAsync(Recipe recipe);
         Task<Recipe?> DeleteAsync(int id);
+        Task<List<Recipe>> GetByIdsAsync(IEnumerable<int> ids);
+        Task<bool> DeleteRangeAsync(IEnumerable<Recipe> recipes);
 
     }
 }

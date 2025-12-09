@@ -118,5 +118,23 @@ namespace SweetfyAPI.Services
             var result = await _orderRepo.DeleteAsync(id);
             return result != null;
         }
+
+        public async Task<(bool IsSuccess, string Message)> BulkDeleteOrdersAsync(IEnumerable<int> ids)
+        {
+            if (ids == null || !ids.Any()) return (false, "Lista vazia.");
+
+            var userBakeryId = _userService.GetMyBakeryId();
+            var ordersToDelete = await _orderRepo.GetByIdsAsync(ids);
+
+            var authorizedToDelete = ordersToDelete.Where(o => o.BakeryId == userBakeryId).ToList();
+
+            if (!authorizedToDelete.Any()) return (true, "Nenhum pedido válido encontrado.");
+
+            var success = await _orderRepo.DeleteRangeAsync(authorizedToDelete);
+
+            return success
+                ? (true, $"Sucesso! {authorizedToDelete.Count} pedidos excluídos.")
+                : (false, "Erro ao salvar no banco.");
+        }
     }
 }

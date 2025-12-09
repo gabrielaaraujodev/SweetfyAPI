@@ -7,6 +7,8 @@
         Task<Ingredient> AddAsync(Ingredient ingredient);
         Task<Ingredient?> UpdateAsync(Ingredient ingredient);
         Task<Ingredient?> DeleteAsync(int id);
+        Task<List<Ingredient>> GetByIdsAsync(IEnumerable<int> ids);
+        Task<bool> DeleteRangeAsync(IEnumerable<Ingredient> products);
     }
 
 }

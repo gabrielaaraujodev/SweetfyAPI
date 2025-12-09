@@ -19,6 +19,17 @@ public class OrderRepository : IOrderRepository
             .ToListAsync();
     }
 
+    public async Task<List<Order>> GetByIdsAsync(IEnumerable<int> ids)
+    {
+        return await _context.Orders.Where(o => ids.Contains(o.Id)).ToListAsync();
+    }
+
+    public async Task<bool> DeleteRangeAsync(IEnumerable<Order> orders)
+    {
+        _context.Orders.RemoveRange(orders);
+        return await _context.SaveChangesAsync() > 0;
+    }
+
     public async Task<Order?> GetByIdAsync(int id)
     {
         return await _context.Orders.FirstOrDefaultAsync(o => o.Id == id);

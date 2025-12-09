@@ -117,6 +117,7 @@ builder.Services.AddScoped<IRecipeRepository, RecipeRepository>();
 builder.Services.AddScoped<IRecipeServiceRepository, RecipeServiceRepository>();
 builder.Services.AddScoped<IServiceRepository, ServiceRepository>();
 builder.Services.AddScoped<ITokenService, TokenService>();
+builder.Services.AddScoped<ICostPropagationService, CostPropagationService>();
 // -------------------------------------------------------------
 
 builder.Services.AddScoped<IUserService, UserService>();

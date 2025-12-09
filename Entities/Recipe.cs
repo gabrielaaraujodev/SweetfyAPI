@@ -21,6 +21,8 @@ public class Recipe
     [Required, Column(TypeName = "decimal(5,2)")]
     public decimal AdditionalCostPercent { get; set; } = 0;
 
+    [Column(TypeName = "decimal(18,2)")]
+    public decimal BaseCost { get; set; }
     [Required]
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? UpdatedAt { get; set; }

@@ -1,4 +1,5 @@
 ﻿using SweetfyAPI.DTOs.RecipeDTO;
+using SweetfyAPI.DTOs.ServiceDTO;
 
 namespace SweetfyAPI.Services
 {
@@ -9,5 +10,7 @@ namespace SweetfyAPI.Services
         Task<Recipe?> CreateRecipeAsync(CreateRecipeDto dto);
         Task<Recipe?> UpdateRecipeAsync(int id, UpdateRecipeDto dto);
         Task<bool> DeleteRecipeAsync(int id);
+        decimal CalculateRecipeCost(Recipe recipe);
+        Task<(bool IsSuccess, string Message)> BulkDeleteRecipesAsync(IEnumerable<int> ids);
     }
 }

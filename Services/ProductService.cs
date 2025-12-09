@@ -9,6 +9,7 @@ namespace SweetfyAPI.Services
         private readonly IProductRepository _productRepo;
         private readonly IIngredientRepository _ingredientRepo;
         private readonly IServiceRepository _serviceRepo;
+        private readonly ICostPropagationService _costPropagationService;
         private readonly IRecipeRepository _recipeRepo;
         private readonly IUserService _userService;
         private readonly IMapper _mapper;
@@ -19,7 +20,8 @@ namespace SweetfyAPI.Services
             IServiceRepository serviceRepo,
             IRecipeRepository recipeRepo,
             IUserService userService,
-            IMapper mapper)
+            IMapper mapper,
+            ICostPropagationService costPropagationService)
         {
             _productRepo = productRepo;
             _ingredientRepo = ingredientRepo;
@@ -27,6 +29,7 @@ namespace SweetfyAPI.Services
             _recipeRepo = recipeRepo;
             _userService = userService;
             _mapper = mapper;
+            _costPropagationService = costPropagationService;
         }
 
         public async Task<IEnumerable<global::Product>> GetProductsForUserAsync()
@@ -83,6 +86,8 @@ namespace SweetfyAPI.Services
             existingProduct.UpdatedAt = DateTime.UtcNow;
 
             await _productRepo.UpdateAsync(existingProduct);
+
+            await _costPropagationService.PropagateProductChangesAsync(id, bakeryId);
 
             return await _productRepo.GetByIdWithComponentsAsync(id);
         }
@@ -173,6 +178,30 @@ namespace SweetfyAPI.Services
                     product.ProfitPercent = 0;
                 }
             }
+        }
+
+        public async Task<(bool IsSuccess, string Message)> BulkDeleteProductsAsync(IEnumerable<int> ids)
+        {
+            if (ids == null || !ids.Any())
+                return (false, "Nenhum ID fornecido para exclusão.");
+
+            var userBakeryId = _userService.GetMyBakeryId();
+
+            var productsToDelete = await _productRepo.GetByIdsAsync(ids);
+
+            var authorizedToDelete = productsToDelete
+                .Where(p => p.BakeryId == userBakeryId)
+                .ToList();
+
+            if (!authorizedToDelete.Any())
+                return (true, "Nenhum produto válido encontrado que pertença à sua padaria.");
+
+            var success = await _productRepo.DeleteRangeAsync(authorizedToDelete);
+
+            if (success)
+                return (true, $"Sucesso! {authorizedToDelete.Count} produtos excluídos.");
+            else
+                return (false, "Erro ao salvar as alterações no banco de dados durante a exclusão.");
         }
     }
 }

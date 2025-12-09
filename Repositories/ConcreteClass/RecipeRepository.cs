@@ -14,14 +14,30 @@ public class RecipeRepository : IRecipeRepository
     public async Task<IEnumerable<Recipe>> GetByBakeryIdAsync(int bakeryId)
     {
         return await _context.Recipes
-            .Where(r => r.BakeryId == bakeryId)
-            .AsNoTracking()
-            .ToListAsync();
+              .Include(r => r.RecipeIngredients)
+                  .ThenInclude(ri => ri.Ingredient)
+              .Include(r => r.RecipeServices)
+                  .ThenInclude(rs => rs.Service)
+              .Where(r => r.BakeryId == bakeryId)
+              .AsNoTracking()
+              .ToListAsync();
     }
 
     public async Task<Recipe?> GetByIdAsync(int id)
     {
         return await _context.Recipes.FirstOrDefaultAsync(r => r.Id == id);
+    }
+    public async Task<List<Recipe>> GetByIdsAsync(IEnumerable<int> ids)
+    {
+        return await _context.Recipes
+            .Where(r => ids.Contains(r.Id))
+            .ToListAsync();
+    }
+    public async Task<bool> DeleteRangeAsync(IEnumerable<Recipe> recipes)
+    {
+        _context.Recipes.RemoveRange(recipes);
+        var changes = await _context.SaveChangesAsync();
+        return changes > 0;
     }
 
     public async Task<Recipe?> GetByIdWithComponentsAsync(int recipeId)

@@ -48,4 +48,14 @@ public class ServiceRepository : IServiceRepository
         await _context.SaveChangesAsync();
         return service;
     }
+
+    public async Task<List<Service>> GetByIdsAsync(IEnumerable<int> ids)
+    {
+        return await _context.Services.Where(s => ids.Contains(s.Id)).ToListAsync();
+    }
+    public async Task<bool> DeleteRangeAsync(IEnumerable<Service> services)
+    {
+        _context.Services.RemoveRange(services);
+        return await _context.SaveChangesAsync() > 0;
+    }
 }

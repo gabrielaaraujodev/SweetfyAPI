@@ -14,6 +14,12 @@ public class ProductRepository : IProductRepository
     public async Task<IEnumerable<Product>> GetByBakeryIdAsync(int bakeryId)
     {
         return await _context.Products
+            .Include(p => p.ProductIngredients)
+                .ThenInclude(pi => pi.Ingredient)
+            .Include(p => p.ProductRecipes)
+                .ThenInclude(pr => pr.Recipe)
+            .Include(p => p.ProductServices)
+                .ThenInclude(ps => ps.Service)
             .Where(p => p.BakeryId == bakeryId)
             .AsNoTracking()
             .ToListAsync();
@@ -24,6 +30,19 @@ public class ProductRepository : IProductRepository
         return await _context.Products.FirstOrDefaultAsync(p => p.Id == id);
     }
 
+    public async Task<List<Product>> GetByIdsAsync(IEnumerable<int> ids)
+    {
+        return await _context.Products
+            .Where(r => ids.Contains(r.Id))
+            .ToListAsync();
+    }
+
+    public async Task<bool> DeleteRangeAsync(IEnumerable<Product> products)
+    {
+        _context.Products.RemoveRange(products);
+        var changes = await _context.SaveChangesAsync();
+        return changes > 0;
+    }
     public async Task<Product?> GetByIdWithComponentsAsync(int id)
     {
         return await _context.Products

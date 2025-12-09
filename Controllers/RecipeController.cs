@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using SweetfyAPI.DTOs.AuthDTO;
 using SweetfyAPI.DTOs.RecipeDTO;
 using SweetfyAPI.Services;
 
@@ -35,7 +36,7 @@ namespace SweetfyAPI.Controllers
         /// <returns>A list of simple RecipeDto objects.</returns>
         [HttpGet]
         [ProducesResponseType(typeof(IEnumerable<RecipeDto>), StatusCodes.Status200OK)]
-        public async Task<ActionResult<IEnumerable<RecipeDto>>> GetMyRecipes()
+        public async Task<ActionResult<IEnumerable<RecipeDto>>> GetMyRecipesV2()
         {
             var recipes = await _recipeService.GetRecipesForUserAsync();
             return Ok(_mapper.Map<IEnumerable<RecipeDto>>(recipes));
@@ -111,6 +112,19 @@ namespace SweetfyAPI.Controllers
                 return NotFound(new { Message = "Recipe not found." });
 
             return NoContent();
+        }
+
+        /// <summary>
+        /// Deleta múltiplas receitas de uma vez.
+        /// </summary>
+        [HttpDelete("bulk-delete")]
+        [ProducesResponseType(typeof(ResponseModel), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ResponseModel), StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> BulkDelete([FromBody] List<int> ids)
+        {
+            var (isSuccess, message) = await _recipeService.BulkDeleteRecipesAsync(ids);
+            if (!isSuccess) return BadRequest(new ResponseModel { Status = "Error", Message = message });
+            return Ok(new ResponseModel { Status = "Success", Message = message });
         }
     }
 }

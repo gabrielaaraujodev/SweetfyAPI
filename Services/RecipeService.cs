@@ -11,19 +11,22 @@ namespace SweetfyAPI.Services
         private readonly IServiceRepository _serviceRepo;    
         private readonly IUserService _userService;
         private readonly IMapper _mapper;
+        private readonly ICostPropagationService _costPropagationService;
 
         public RecipeService(
             IRecipeRepository recipeRepo,
             IIngredientRepository ingredientRepo,
             IServiceRepository serviceRepo,
             IUserService userService,
-            IMapper mapper)
+            IMapper mapper,
+            ICostPropagationService costPropagationService)
         {
             _recipeRepo = recipeRepo;
             _ingredientRepo = ingredientRepo;
             _serviceRepo = serviceRepo;
             _userService = userService;
             _mapper = mapper;
+            _costPropagationService = costPropagationService;
         }
 
         public async Task<IEnumerable<Recipe>> GetRecipesForUserAsync()
@@ -59,6 +62,7 @@ namespace SweetfyAPI.Services
                 {
                     return null; 
                 }
+                ri.Ingredient = ingredient;
                 ri.UnitPriceSnapshot = ingredient.UnitPrice;
             }
 
@@ -69,8 +73,10 @@ namespace SweetfyAPI.Services
                 {
                     return null; 
                 }
+                rs.Service = service;
                 rs.UnitPriceSnapshot = service.UnitPrice;
             }
+            recipe.BaseCost = CalculateRecipeCost(recipe);
 
             return await _recipeRepo.AddAsync(recipe);
         }
@@ -87,6 +93,8 @@ namespace SweetfyAPI.Services
 
             _mapper.Map(dto, existingRecipe);
 
+           
+
             foreach (var ri in existingRecipe.RecipeIngredients)
             {
                 ri.RecipeId = existingRecipe.Id; 
@@ -101,10 +109,13 @@ namespace SweetfyAPI.Services
                 if (service == null || service.BakeryId != bakeryId) return null;
                 rs.UnitPriceSnapshot = service.UnitPrice;
             }
+            await _recipeRepo.UpdateAsync(existingRecipe);
+
+            await _costPropagationService.PropagateRecipeChangesAsync(id, bakeryId);
 
             existingRecipe.UpdatedAt = DateTime.UtcNow;
 
-            return await _recipeRepo.UpdateAsync(existingRecipe);
+            return existingRecipe;
         }
 
         public async Task<bool> DeleteRecipeAsync(int id)
@@ -119,6 +130,57 @@ namespace SweetfyAPI.Services
 
             var result = await _recipeRepo.DeleteAsync(id);
             return result != null;
+        }
+
+        public decimal CalculateRecipeCost(Recipe recipe)
+        {
+            decimal totalCost = 0;
+
+            if (recipe.RecipeIngredients != null)
+            {
+                totalCost += recipe.RecipeIngredients.Sum(ri => (ri.UnitPriceSnapshot ?? 0) * ri.Quantity);
+            }
+
+            if (recipe.RecipeServices != null)
+            {
+                totalCost += recipe.RecipeServices.Sum(rs => (rs.UnitPriceSnapshot ?? 0) * rs.Quantity);
+            }
+
+            decimal unitCost = (recipe.YieldQuantity > 0) ? (totalCost / recipe.YieldQuantity) : 0;
+
+            unitCost *= (1 + recipe.AdditionalCostPercent / 100);
+
+            return unitCost;
+        }
+
+        public async Task<(bool IsSuccess, string Message)> BulkDeleteRecipesAsync(IEnumerable<int> ids)
+        {
+            if (ids == null || !ids.Any())
+                return (false, "Nenhum ID fornecido para exclusão.");
+
+            var userBakeryId = _userService.GetMyBakeryId();
+
+            var recipesToDelete = await _recipeRepo.GetByIdsAsync(ids);
+
+            var authorizedToDelete = recipesToDelete
+                .Where(r => r.BakeryId == userBakeryId)
+                .ToList();
+
+            if (!authorizedToDelete.Any())
+            {
+                return (true, "Nenhuma receita válida para exclusão foi encontrada ou elas não pertencem à sua padaria.");
+            }
+
+            var success = await _recipeRepo.DeleteRangeAsync(authorizedToDelete);
+
+            if (success)
+            {
+                return (true, $"Sucesso! {authorizedToDelete.Count} receitas excluídas.");
+            }
+            else
+            {
+                return (false, "Erro ao salvar as alterações no banco de dados durante a exclusão.");
+            }
         }
     }
 }

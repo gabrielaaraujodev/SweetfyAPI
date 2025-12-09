@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using SweetfyAPI.DTOs.AuthDTO;
 using SweetfyAPI.DTOs.ProductDTO;
 using SweetfyAPI.Services;
 
@@ -34,11 +35,11 @@ namespace SweetfyAPI.Controllers
         /// </summary>
         /// <returns>A list of simple ProductDto objects.</returns>
         [HttpGet]
-        [ProducesResponseType(typeof(IEnumerable<ProductDto>), StatusCodes.Status200OK)]
-        public async Task<ActionResult<IEnumerable<ProductDto>>> GetMyProducts()
+        [ProducesResponseType(typeof(IEnumerable<ProductDetailsDto>), StatusCodes.Status200OK)]
+        public async Task<ActionResult<IEnumerable<ProductDetailsDto>>> GetMyProducts()
         {
             var products = await _productService.GetProductsForUserAsync();
-            return Ok(_mapper.Map<IEnumerable<ProductDto>>(products));
+            return Ok(_mapper.Map<IEnumerable<ProductDetailsDto>>(products));
         }
 
         /// <summary>
@@ -111,6 +112,19 @@ namespace SweetfyAPI.Controllers
                 return NotFound(new { Message = "Product not found." });
 
             return NoContent();
+        }
+
+        /// <summary>
+        /// Deleta múltiplos produtos de uma vez.
+        /// </summary>
+        [HttpDelete("bulk-delete")]
+        [ProducesResponseType(typeof(ResponseModel), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ResponseModel), StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> BulkDelete([FromBody] List<int> ids)
+        {
+            var (isSuccess, message) = await _productService.BulkDeleteProductsAsync(ids);
+            if (!isSuccess) return BadRequest(new ResponseModel { Status = "Error", Message = message });
+            return Ok(new ResponseModel { Status = "Success", Message = message });
         }
     }
 }

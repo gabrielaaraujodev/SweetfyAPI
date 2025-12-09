@@ -4,6 +4,7 @@
         int Id,
         string Name,
         decimal YieldQuantity,
+        decimal BaseCost,
         UnitType? YieldUnit,
         DateTime CreatedAt,
         DateTime? UpdatedAt

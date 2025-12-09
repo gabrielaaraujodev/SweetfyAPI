@@ -55,4 +55,14 @@ public class IngredientRepository : IIngredientRepository
         await _context.SaveChangesAsync();
         return ingredient;
     }
+
+    public async Task<List<Ingredient>> GetByIdsAsync(IEnumerable<int> ids)
+    {
+        return await _context.Ingredients.Where(s => ids.Contains(s.Id)).ToListAsync();
+    }
+    public async Task<bool> DeleteRangeAsync(IEnumerable<Ingredient> ingredients)
+    {
+        _context.Ingredients.RemoveRange(ingredients);
+        return await _context.SaveChangesAsync() > 0;
+    }
 }

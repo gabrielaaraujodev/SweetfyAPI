@@ -9,5 +9,7 @@ namespace SweetfyAPI.Services
         Task<Product?> CreateProductAsync(CreateProductDto dto);
         Task<Product?> UpdateProductAsync(int id, UpdateProductDto dto);
         Task<bool> DeleteProductAsync(int id);
+        Task<(bool IsSuccess, string Message)> BulkDeleteProductsAsync(IEnumerable<int> ids);
+
     }
 }

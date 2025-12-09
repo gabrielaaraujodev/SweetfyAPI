@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using SweetfyAPI.DTOs.AuthDTO;
 using SweetfyAPI.DTOs.IndredientDTO; 
 using SweetfyAPI.Services;
 
@@ -113,6 +114,39 @@ namespace SweetfyAPI.Controllers
                 return NotFound(new { Message = "Ingredient not found." });
 
             return NoContent();
+        }
+
+        /// <summary>
+        /// Atualiza múltiplos serviços de uma vez (Nome, Preço, etc).
+        /// </summary>
+        [HttpPut("bulk-update")]
+        [ProducesResponseType(typeof(ResponseModel), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ResponseModel), StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> BulkUpdateServices([FromBody] List<BulkUpdateIngredientItemDTO> updates)
+        {
+            var (isSuccess, message) = await _ingredientService.BulkUpdateIngredientsAsync(updates);
+
+            if (!isSuccess)
+                return BadRequest(new ResponseModel { Status = "Error", Message = message });
+
+            return Ok(new ResponseModel { Status = "Success", Message = message });
+        }
+
+
+        /// <summary>
+        /// Deleta múltiplos ingredientes de uma vez.
+        /// </summary>
+        [HttpDelete("bulk-delete")]
+        [ProducesResponseType(typeof(ResponseModel), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ResponseModel), StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> BulkDelete([FromBody] List<int> ids)
+        {
+            var (isSuccess, message) = await _ingredientService.BulkDeleteIngredientsAsync(ids);
+
+            if (!isSuccess)
+                return BadRequest(new ResponseModel { Status = "Error", Message = message });
+
+            return Ok(new ResponseModel { Status = "Success", Message = message });
         }
     }
 }

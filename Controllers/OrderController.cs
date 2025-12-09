@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using SweetfyAPI.DTOs.AuthDTO;
 using SweetfyAPI.DTOs.OrderDTO;
 using SweetfyAPI.Services;
 
@@ -110,6 +111,19 @@ namespace SweetfyAPI.Controllers
                 return NotFound(new { Message = "Order not found." });
 
             return NoContent();
+        }
+
+        /// <summary>
+        /// Deleta múltiplas encomendas de uma vez.
+        /// </summary>
+        [HttpDelete("bulk-delete")]
+        [ProducesResponseType(typeof(ResponseModel), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ResponseModel), StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> BulkDelete([FromBody] List<int> ids)
+        {
+            var (isSuccess, message) = await _orderService.BulkDeleteOrdersAsync(ids);
+            if (!isSuccess) return BadRequest(new ResponseModel { Status = "Error", Message = message });
+            return Ok(new ResponseModel { Status = "Success", Message = message });
         }
     }
 }
