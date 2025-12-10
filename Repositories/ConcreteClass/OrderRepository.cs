@@ -13,8 +13,11 @@ public class OrderRepository : IOrderRepository
 
     public async Task<IEnumerable<Order>> GetByBakeryIdAsync(int bakeryId)
     {
-        return await _context.Orders
+         return await _context.Orders
             .AsNoTracking()
+            .Include(o => o.OrderProducts)
+                .ThenInclude(op => op.Product)
+           
             .Where(o => o.BakeryId == bakeryId)
             .ToListAsync();
     }

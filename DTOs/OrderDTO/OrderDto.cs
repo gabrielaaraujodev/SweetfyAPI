@@ -5,7 +5,11 @@
         string Name,
         decimal? SalePrice,
         decimal? Profit,
+        decimal? TotalCost,
+        decimal? TotalYield,
         string Status,
-        DateTime CreatedAt
+        string Description,
+        DateTime CreatedAt,
+        List<OrderProductDetailsDto> OrderProducts
     );  
 }

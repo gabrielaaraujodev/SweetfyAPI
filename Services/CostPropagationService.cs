@@ -68,7 +68,6 @@ namespace SweetfyAPI.Services
 
         public async Task PropagateRecipeChangesAsync(int recipeId, int bakeryId)
         {
-            // A. Achar Produtos que usam essa Receita
             var productsToUpdate = await _context.ProductRecipes
                 .Where(pr => pr.RecipeId == recipeId && pr.Product.BakeryId == bakeryId)
                 .Select(pr => pr.ProductId)
@@ -117,9 +116,21 @@ namespace SweetfyAPI.Services
             if (recipe == null) return;
 
             decimal totalCost = 0;
-            totalCost += recipe.RecipeIngredients.Sum(ri => ri.Ingredient.UnitPrice * ri.Quantity);
-            totalCost += recipe.RecipeServices.Sum(rs => rs.Service.UnitPrice * rs.Quantity);
+            foreach (var ri in recipe.RecipeIngredients)
+            {
+                ri.UnitPriceSnapshot = ri.Ingredient.UnitPrice;
 
+                decimal costPerUnit = (ri.Ingredient.Quantity > 0)
+                    ? (ri.Ingredient.UnitPrice / ri.Ingredient.Quantity)
+                    : 0;
+
+                totalCost += (costPerUnit * ri.Quantity);
+            }
+            foreach (var rs in recipe.RecipeServices)
+            {
+                rs.UnitPriceSnapshot = rs.Service.UnitPrice;
+                totalCost += (rs.Service.UnitPrice * rs.Quantity);
+            }
             decimal unitCost = (recipe.YieldQuantity > 0) ? (totalCost / recipe.YieldQuantity) : 0;
             unitCost *= (1 + recipe.AdditionalCostPercent / 100);
 
@@ -174,7 +185,8 @@ namespace SweetfyAPI.Services
             if (order == null) return;
 
             decimal totalCost = 0;
-            decimal totalSale = 0; 
+            decimal totalSale = 0;
+            decimal totalYield = 0;
 
             foreach (var op in order.OrderProducts)
             {
@@ -183,12 +195,16 @@ namespace SweetfyAPI.Services
 
                 totalCost += (op.CostSnapshot.Value * op.Quantity);
                 totalSale += (op.UnitPriceSnapshot.Value * op.Quantity);
+
+                totalYield += op.Quantity;
             }
 
             foreach (var or in order.OrderRecipes)
             {
                 or.CostSnapshot = or.Recipe.BaseCost;
                 totalCost += (or.CostSnapshot.Value * or.Quantity);
+
+                totalYield += or.Quantity;
             }
 
             order.TotalCost = totalCost;
@@ -196,6 +212,8 @@ namespace SweetfyAPI.Services
             order.SalePrice = totalSale;
 
             order.Profit = (order.SalePrice ?? 0) - (order.TotalCost ?? 0);
+
+            order.TotalYield = totalYield;
 
             await _context.SaveChangesAsync();
         }

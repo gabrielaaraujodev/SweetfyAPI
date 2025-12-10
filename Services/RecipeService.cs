@@ -93,22 +93,31 @@ namespace SweetfyAPI.Services
 
             _mapper.Map(dto, existingRecipe);
 
-           
-
             foreach (var ri in existingRecipe.RecipeIngredients)
             {
-                ri.RecipeId = existingRecipe.Id; 
+                ri.RecipeId = existingRecipe.Id;
+
                 var ingredient = await _ingredientRepo.GetByIdAsync(ri.IngredientId);
-                if (ingredient == null || ingredient.BakeryId != bakeryId) return null;
+
+                if (ingredient == null || ingredient.BakeryId != bakeryId) return null; 
                 ri.UnitPriceSnapshot = ingredient.UnitPrice;
+
+                ri.Ingredient = ingredient;
             }
+
             foreach (var rs in existingRecipe.RecipeServices)
             {
-                rs.RecipeId = existingRecipe.Id; 
+                rs.RecipeId = existingRecipe.Id;
+
                 var service = await _serviceRepo.GetByIdAsync(rs.ServiceId);
+
                 if (service == null || service.BakeryId != bakeryId) return null;
+
                 rs.UnitPriceSnapshot = service.UnitPrice;
+                rs.Service = service; 
             }
+
+            existingRecipe.BaseCost = CalculateRecipeCost(existingRecipe);
             await _recipeRepo.UpdateAsync(existingRecipe);
 
             await _costPropagationService.PropagateRecipeChangesAsync(id, bakeryId);
@@ -138,7 +147,17 @@ namespace SweetfyAPI.Services
 
             if (recipe.RecipeIngredients != null)
             {
-                totalCost += recipe.RecipeIngredients.Sum(ri => (ri.UnitPriceSnapshot ?? 0) * ri.Quantity);
+                foreach (var ri in recipe.RecipeIngredients)
+                {
+                    if (ri.Ingredient == null) continue;
+
+                    decimal price = ri.UnitPriceSnapshot ?? ri.Ingredient.UnitPrice;
+                    decimal packageSize = ri.Ingredient.Quantity; 
+
+                    decimal costPerUnit = (packageSize > 0) ? (price / packageSize) : 0;
+
+                    totalCost += (costPerUnit * ri.Quantity);
+                }
             }
 
             if (recipe.RecipeServices != null)

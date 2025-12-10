@@ -39,7 +39,8 @@ namespace SweetfyAPI.Mappings
             CreateMap<RecipeIngredient, RecipeIngredientDetailsDto>()
                 .ForMember(dest => dest.IngredientName, opt => opt.MapFrom(src => src.Ingredient.Name));
             CreateMap<RecipeService, RecipeServiceDetailsDto>()
-                .ForMember(dest => dest.ServiceName, opt => opt.MapFrom(src => src.Service.Name));
+                .ForMember(dest => dest.ServiceName, opt => opt.MapFrom(src => src.Service.Name))
+                .ForMember(dest => dest.Unit, opt => opt.MapFrom(src => src.Service.Unit));
 
 
 

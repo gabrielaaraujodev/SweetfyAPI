@@ -120,9 +120,13 @@ namespace SweetfyAPI.Services
                 var ingredient = await _ingredientRepo.GetByIdAsync(pi.IngredientId);
                 if (ingredient == null || ingredient.BakeryId != bakeryId) throw new Exception("Invalid Ingredient.");
 
+                pi.UnitPriceSnapshot = ingredient.UnitPrice;
 
-                pi.UnitPriceSnapshot = ingredient.UnitPrice; 
-                baseCost += (pi.UnitPriceSnapshot.Value * pi.Quantity);
+                decimal costPerUnit = (ingredient.Quantity > 0)
+                 ? (ingredient.UnitPrice / ingredient.Quantity)
+                 : 0;
+
+                baseCost += (costPerUnit * pi.Quantity);
             }
 
 
@@ -137,18 +141,11 @@ namespace SweetfyAPI.Services
 
             foreach (var pr in pRecipes)
             {
-                var recipe = await _recipeRepo.GetByIdWithComponentsAsync(pr.RecipeId);
+                var recipe = await _recipeRepo.GetByIdAsync(pr.RecipeId);
                 if (recipe == null || recipe.BakeryId != bakeryId) throw new Exception("Invalid Recipe.");
 
-                decimal recipeCost = 0;
-                recipeCost += recipe.RecipeIngredients.Sum(ri => (ri.UnitPriceSnapshot ?? 0) * ri.Quantity);
-                recipeCost += recipe.RecipeServices.Sum(rs => (rs.UnitPriceSnapshot ?? 0) * rs.Quantity);
+                pr.UnitPriceSnapshot = recipe.BaseCost;
 
-                decimal recipeUnitCost = (recipe.YieldQuantity > 0) ? (recipeCost / recipe.YieldQuantity) : 0;
-
-                recipeUnitCost *= (1 + recipe.AdditionalCostPercent / 100);
-
-                pr.UnitPriceSnapshot = recipeUnitCost; 
                 baseCost += (pr.UnitPriceSnapshot.Value * pr.Quantity);
             }
 

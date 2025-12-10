@@ -7,6 +7,9 @@
         decimal? SalePrice,
         decimal? ProfitAmount,
         DateTime CreatedAt,
-        DateTime? UpdatedAt
+        DateTime? UpdatedAt,
+        List<ProductIngredientDetailsDto> ProductIngredients,
+        List<ProductRecipeDetailsDto> ProductRecipes,
+        List<ProductServiceDetailsDto> ProductServices
     );
 }

@@ -53,6 +53,7 @@ namespace SweetfyAPI.Services
 
             decimal totalCost = 0;
             decimal totalSalePrice = 0;
+            decimal totalYield = 0; 
 
             foreach (var op in order.OrderProducts)
             {
@@ -64,6 +65,7 @@ namespace SweetfyAPI.Services
 
                 totalCost += (op.CostSnapshot.Value * op.Quantity);
                 totalSalePrice += (op.UnitPriceSnapshot.Value * op.Quantity);
+                totalYield += op.Quantity;
             }
 
             foreach (var or in order.OrderRecipes)
@@ -78,7 +80,8 @@ namespace SweetfyAPI.Services
                 recipeUnitCost *= (1 + recipe.AdditionalCostPercent / 100);
 
                 or.CostSnapshot = recipeUnitCost;
-                or.UnitPriceSnapshot = 0; 
+                or.UnitPriceSnapshot = 0;
+                totalYield += or.Quantity;
 
                 totalCost += (or.CostSnapshot.Value * or.Quantity);
             }
@@ -86,6 +89,7 @@ namespace SweetfyAPI.Services
             order.TotalCost = totalCost;
             order.SalePrice = totalSalePrice;
             order.Profit = totalSalePrice - totalCost;
+            order.TotalYield = totalYield;
 
             return await _orderRepo.AddAsync(order);
         }
@@ -101,6 +105,29 @@ namespace SweetfyAPI.Services
             }
 
             _mapper.Map(dto, existingOrder);
+
+            decimal totalCost = 0;
+            decimal totalSalePrice = 0;
+            decimal totalYield = 0;
+
+            foreach (var op in existingOrder.OrderProducts)
+            {
+                var product = await _productRepo.GetByIdAsync(op.ProductId);
+                if (product != null)
+                {
+                    op.CostSnapshot = product.BaseCost ?? 0;
+                    op.UnitPriceSnapshot = product.SalePrice ?? 0;
+
+                    totalCost += (op.CostSnapshot.Value * op.Quantity);
+                    totalSalePrice += (op.UnitPriceSnapshot.Value * op.Quantity);
+                    totalYield += op.Quantity;
+                }
+            }
+
+            existingOrder.TotalCost = totalCost;
+            existingOrder.SalePrice = totalSalePrice;
+            existingOrder.Profit = totalSalePrice - totalCost;
+            existingOrder.TotalYield = totalYield;
 
             return await _orderRepo.UpdateAsync(existingOrder);
         }

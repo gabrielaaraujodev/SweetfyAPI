@@ -5,6 +5,7 @@
         int ServiceId,
         string ServiceName, 
         decimal Quantity,
-        decimal? UnitPriceSnapshot
+        decimal? UnitPriceSnapshot,
+        UnitType Unit
     );
 }
