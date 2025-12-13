@@ -86,47 +86,6 @@ namespace SweetfyAPI.Services
             return result != null;
         }
 
-        public async Task<(bool IsSuccess, string Message)> BulkUpdateServicesAsync(List<BulkUpdateServiceItemDto> updates)
-        {
-            if (updates == null || !updates.Any())
-                return (false, "Lista vazia.");
-
-            var userBakeryId = _userService.GetMyBakeryId();
-
-            var updatedCount = 0;
-            var servicesToPropagate = new List<int>();
-
-            foreach (var item in updates)
-            {
-                var service = await _serviceRepo.GetByIdAsync(item.Id);
-
-                if (service != null && service.BakeryId == userBakeryId)
-                {
-                    service.Name = item.Name;
-                    service.Description = item.Description;
-                    service.ProviderName = item.ProviderName;
-                    service.Unit = item.Unit;
-                    service.UnitPrice = item.UnitPrice;
-
-              
-                    await _serviceRepo.UpdateAsync(service);
-
-                    servicesToPropagate.Add(service.Id);
-                    updatedCount++;
-                }
-            }
-
-            if (updatedCount == 0)
-                return (false, "Nenhum serviço válido encontrado para atualização.");
-
-            foreach (var serviceId in servicesToPropagate)
-            {
-                await _costPropagationService.PropagateServiceChangesAsync(serviceId, userBakeryId);
-            }
-
-            return (true, $"Sucesso! {updatedCount} serviços atualizados e custos recalculados.");
-        }
-
         public async Task<(bool IsSuccess, string Message)> BulkDeleteServicesAsync(IEnumerable<int> ids)
         {
             if (ids == null || !ids.Any()) return (false, "Nenhum ID fornecido.");
@@ -142,6 +101,32 @@ namespace SweetfyAPI.Services
 
             if (success) return (true, $"Sucesso! {authorizedToDelete.Count} serviços excluídos.");
             else return (false, "Erro ao salvar alterações.");
+        }
+
+        public async Task<(bool IsSuccess, string Message)> BulkUpdatePricesAsync(List<BulkUpdateServicePriceDto> updates)
+        {
+            var bakeryId = _userService.GetMyBakeryId();
+            int count = 0;
+
+            foreach (var item in updates)
+            {
+                var service = await _serviceRepo.GetByIdAsync(item.Id);
+
+                if (service != null && service.BakeryId == bakeryId)
+                {
+                    // 1. Atualiza preço
+                    service.UnitPrice = item.NewPrice;
+
+                    await _serviceRepo.UpdateAsync(service);
+
+                    // 2. Dispara a propagação
+                    await _costPropagationService.PropagateServiceChangesAsync(item.Id, bakeryId);
+
+                    count++;
+                }
+            }
+
+            return (true, $"{count} preços de serviços atualizados.");
         }
     }
 }

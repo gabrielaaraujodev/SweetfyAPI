@@ -112,45 +112,29 @@ namespace SweetfyAPI.Services
                 return (false, "Erro ao salvar as alterações...");
         }
 
-        public async Task<(bool IsSuccess, string Message)> BulkUpdateIngredientsAsync(List<BulkUpdateIngredientItemDTO> updates)
+        public async Task<(bool IsSuccess, string Message)> BulkUpdatePricesAsync(List<BulkUpdateIngredientPriceDto> updates)
         {
-            if (updates == null || !updates.Any())
-                return (false, "Lista vazia.");
-
-            var userBakeryId = _userService.GetMyBakeryId();
-
-            var updatedCount = 0;
-            var servicesToPropagate = new List<int>();
+            var bakeryId = _userService.GetMyBakeryId();
+            int count = 0;
 
             foreach (var item in updates)
             {
-                var service = await _ingredientRepo.GetByIdAsync(item.Id);
+                var ingredient = await _ingredientRepo.GetByIdAsync(item.Id);
 
-                if (service != null && service.BakeryId == userBakeryId)
+                if (ingredient != null && ingredient.BakeryId == bakeryId)
                 {
-                    service.Name = item.Name;
-                    service.Description = item.Description;
-                    service.Brand = item.Brand;
-                    service.Unit = item.Unit;
-                    service.UnitPrice = item.UnitPrice;
+                    ingredient.UnitPrice = item.NewPrice;
+                    ingredient.UpdatedAt = DateTime.UtcNow;
 
+                    await _ingredientRepo.UpdateAsync(ingredient);
 
-                    await _ingredientRepo.UpdateAsync(service);
+                    await _costPropagationService.PropagateIngredientChangesAsync(item.Id, bakeryId);
 
-                    servicesToPropagate.Add(service.Id);
-                    updatedCount++;
+                    count++;
                 }
             }
 
-            if (updatedCount == 0)
-                return (false, "Nenhum serviço válido encontrado para atualização.");
-
-            foreach (var serviceId in servicesToPropagate)
-            {
-                await _costPropagationService.PropagateServiceChangesAsync(serviceId, userBakeryId);
-            }
-
-            return (true, $"Sucesso! {updatedCount} serviços atualizados e custos recalculados.");
+            return (true, $"{count} preços de ingredientes atualizados.");
         }
     }
 }
